@@ -1,0 +1,22 @@
+# Ignore Excel files
+*.xlsx
+*.xlsm
+*.xls
+*.xlsb
+
+
+
+# Ignore Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore compiled Python artifacts
+*.pyd
+*.so
+*.dll
+
+*.log
+*.tmp
+
+*.csv
