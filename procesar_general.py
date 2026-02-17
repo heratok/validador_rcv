@@ -29,7 +29,7 @@ from normalizadores_lib import (
 from fechas_lib import procesar_fechas_df, INDICES_FECHAS
 
 # --- CONFIGURACIÓN ---
-ARCHIVO_ENTRADA = "./noviembre/BD_CCVM_DUSKAWIEPSINOV2025_con_encabezados.xlsx"
+ARCHIVO_ENTRADA = "./enero/BDRUTACCVMENERO2026_DUSAKAWIEPS_con_encabezados.xlsx"
 ARCHIVO_SALIDA = "Procesado_Final.xlsx"
 REPORTE_ERRORES_CSV = "Reporte_Validacion_Errores.csv"
 REPORTE_ERRORES_EXCEL = "Reporte_Validacion_Errores.xlsx"
@@ -160,6 +160,7 @@ def normalizar_valor(valor):
         "POBLACION RURAL NO MIGRATORIA": "OTRO GRUPO POBLACIONAL",
         "U": "URBANA",
         "R": "RURAL",
+        "CP": "URBANA",  # CP = Cabecera o Pueblo (categoría urbana)
     }
     return variantes.get(val, val)
 

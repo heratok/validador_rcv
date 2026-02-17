@@ -302,7 +302,7 @@ def normalizar_columna_s(df, indice=18):
     def normalizar_zona(valor):
         val = str(valor).strip().upper()
         # Convertir abreviaciones y variantes
-        if val in ["URBANA", "U"]:
+        if val in ["URBANA", "U", "CP"]:  # CP = Cabecera o Pueblo (Urbana)
             return "Urbana"
         if val in ["RURAL", "R"]:
             return "Rural"

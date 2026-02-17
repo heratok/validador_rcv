@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+from openpyxl import load_workbook
 
 # --- CONFIGURACION ---
 BASE_DIR = "."
@@ -31,7 +32,72 @@ def procesar_archivo(ruta_archivo, encabezados):
         return
 
     # Leer datos desde fila 4 (skiprows=3), sin encabezados
-    df = pd.read_excel(ruta_archivo, header=None, skiprows=DATA_START_ROW - 1, engine=engine)
+    if engine == "openpyxl":
+        # Usar openpyxl para conservar el valor mostrado en Excel (formato incluido)
+        def infer_decimals(fmt):
+            if not fmt or fmt == "General":
+                return None
+            # Quitar secciones y literales
+            fmt = fmt.split(";")[0]
+            fmt = fmt.replace('"', "")
+            if "." in fmt:
+                dec_part = fmt.split(".", 1)[1]
+                dec_part = "".join(ch for ch in dec_part if ch in "0#")
+                return len(dec_part)
+            return 0
+
+        wb = load_workbook(ruta_archivo, data_only=True)
+        ws = wb.active
+        data_rows = []
+        max_col = ws.max_column
+        
+        # Detectar la última fila con datos basándose en la PRIMERA COLUMNA (consecutivo)
+        # Un registro válido = tiene consecutivo (primera columna)
+        max_row = ws.max_row
+        while max_row >= DATA_START_ROW:
+            # Revisar si la primera columna tiene un valor
+            cell = ws.cell(row=max_row, column=1)
+            if cell.value is not None:
+                break
+            max_row -= 1
+        
+        # Si no encontró datos, usar DATA_START_ROW como fallback
+        if max_row < DATA_START_ROW:
+            max_row = DATA_START_ROW
+        
+        print(f"  Procesando: filas {DATA_START_ROW} a {max_row} ({max_row - DATA_START_ROW + 1} registros)")
+        
+        # Iterar solo hasta la última fila con datos
+        for row in ws.iter_rows(min_row=DATA_START_ROW, max_row=max_row, max_col=max_col):
+            fila = []
+            for cell in row:
+                if cell.value is None:
+                    fila.append(None)
+                    continue
+                if cell.is_date:
+                    fila.append(cell.value)
+                    continue
+                if cell.data_type == "n":
+                    dec = infer_decimals(cell.number_format)
+                    if dec is None:
+                        fila.append(cell.value)
+                    else:
+                        try:
+                            fila.append(round(float(cell.value), dec))
+                        except Exception:
+                            fila.append(cell.value)
+                    continue
+                fila.append(cell.value)
+            data_rows.append(fila)
+        
+        df = pd.DataFrame(data_rows)
+    else:
+        df = pd.read_excel(
+            ruta_archivo,
+            header=None,
+            skiprows=DATA_START_ROW - 1,
+            engine=engine
+        )
 
     # Ajustar encabezados al numero de columnas reales
     if len(df.columns) <= len(encabezados):
@@ -45,6 +111,17 @@ def procesar_archivo(ruta_archivo, encabezados):
         )
 
     df_salida = pd.DataFrame(df.values, columns=columnas)
+    
+    # IMPORTANTE: Filtrar solo filas que tienen CONSECUTIVO (primera columna con valor)
+    # Esto evita copiar filas vacías o parciales
+    primera_columna = columnas[0] if len(columnas) > 0 else None
+    if primera_columna:
+        # Eliminar filas donde el consecutivo es None, vacío o NaN
+        df_salida = df_salida[df_salida[primera_columna].notna()]
+        df_salida = df_salida[df_salida[primera_columna].astype(str).str.strip() != '']
+    
+    num_registros = len(df_salida)
+    print(f"    ✓ {num_registros} registros válidos (con consecutivo)")
 
     # Guardar como .xlsx con sufijo
     base, _ = os.path.splitext(ruta_archivo)
@@ -52,6 +129,7 @@ def procesar_archivo(ruta_archivo, encabezados):
     df_salida.to_excel(salida, index=False)
 
     print(f"OK - Generado: {salida}")
+
 
 
 def main():
