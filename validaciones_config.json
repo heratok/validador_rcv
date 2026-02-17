@@ -1,0 +1,323 @@
+{
+  "_comentario": "IMPORTANTE: Los índices son 1-based (columna 1 = A, columna 7 = G). El código Python restará 1 para acceder al índice pandas (0-based)",
+  "columnas_validacion": [
+    {
+      "indice": 6,
+      "nombre": "TI IDENTIFICACION",
+      "validos": ["CC", "MS", "RC", "TI", "PA", "CD", "AS", "PT", "CE", "PE", "PS", "SC"]
+    },
+    {
+      "indice": 11,
+      "nombre": "sexo",
+      "validos": ["Femenino", "Masculino"]
+    },
+    {
+      "indice": 12,
+      "nombre": "RÉGIMEN DE AFILACIÓN",
+      "validos": ["S", "C"]
+    },
+    {
+      "indice": 13,
+      "nombre": "PERTENENCIA ÉTNICA",
+      "validos": [
+        "Indígena",
+        "ROM (Gitano)",
+        "Raizal del Archipielago",
+        "Negro (a), Mulato, Afroamericano",
+        "Mestizo",
+        "Ningunas de las Anteriores"
+      ]
+    },
+    {
+      "indice": 14,
+      "nombre": "GRUPO POBLACIONAL",
+      "validos": [
+        "Población Infantil a cargo del ICBF",
+        "Mujer Cabeza de Hogar",
+        "Discapacitados",
+        "Otro Grupo Poblacional",
+        "Desmovilizados",
+        "Adulto Mayor",
+        "Victimas del Conflicto Armado",
+        "Comunidades Indiginas",
+        "Mujer Embarazada"
+      ]
+    },
+    {
+      "indice": 15,
+      "nombre": "ETNIA",
+      "validos": [
+        "Wayuu",
+        "Arhuaco",
+        "Wiwa",
+        "Yukpa",
+        "Kogui",
+        "Inga",
+        "Kankuamo",
+        "Chimila",
+        "Zenu",
+        "Sin Etnia"
+      ]
+    },
+    {
+      "indice": 19,
+      "nombre": "ZONA DE UBICACIÓN DE LA VIVIENDA",
+      "validos": ["Rural", "Urbana"]
+    },
+    {
+      "indice": 25,
+      "nombre": "FUMA",
+      "validos": ["Si", "No", "SINDATO"]
+    },
+    {
+      "indice": 26,
+      "nombre": "CONSUMO DE ALCOHOL",
+      "validos": ["Si", "No", "SINDATO"]
+    },
+    {
+      "indice": 27,
+      "nombre": "DX CONFIRMADO HTA",
+      "validos": ["Si", "No"]
+    },
+    {
+      "indice": 29,
+      "nombre": "DX CONFIRMADO DM",
+      "validos": ["Si", "No"]
+    },
+    {
+      "indice": 31,
+      "nombre": "TIPO DE DM",
+      "validos": [
+        "Tipo 1 Insulinodependiente",
+        "Tipo 2 Insulinodependiente",
+        "Tipo 2 No Insulinodependiente",
+        "No Aplica"
+      ]
+    },
+    {
+      "indice": 32,
+      "nombre": "Etiología de la ERC",
+      "validos": [
+        "HTA o DM",
+        "Autoinmune",
+        "Nefropatía Obstructiva",
+        "Enfermedad Poliquistica",
+        "No tiene ERC",
+        "Otras"
+      ]
+    },
+    {
+      "indice": 36,
+      "nombre": "HTA CONTROLADA",
+      "validos": ["Si", "No"]
+    },
+    {
+      "indice": 43,
+      "nombre": "CLASIFICACION DEL RCV ACTUAL AL INGRESO A BASE",
+      "validos": [
+        "Riesgo Alto",
+        "Riesgo Bajo",
+        "Riesgo Moderado",
+        "No se Clasifico"
+      ]
+    },
+    {
+      "indice": 51,
+      "nombre": "PARCIAL DE ORINA",
+      "validos": ["Normal", "Patologico", "SINDATO"]
+    },
+    {
+      "indice": 63,
+      "nombre": "DM CONTROLADA",
+      "validos": ["Si", "No", "No Aplica"]
+    },
+    {
+      "indice": 66,
+      "nombre": "REPORTE DE EKG",
+      "validos": ["Normal", "Anormal", "SINDATO"]
+    },
+    {
+      "indice": 68,
+      "nombre": "ECOCARDIOGRAMA",
+      "validos": ["Normal", "Anormal", "SINDATO"]
+    },
+    {
+      "indice": 82,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 84,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 86,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 88,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 90,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 92,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 94,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 96,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 98,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 100,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 102,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 104,
+      "nombre": "CONTROL REALIZADO POR",
+      "validos": [
+        "SINDATO",
+        "NO APLICA",
+        "ENFERMERIA",
+        "MEDICO GENERAL",
+        "MEDICO INTERNISTA",
+        "NUTRICIONISTA",
+        "PSICOLOGIA",
+        "MEDICO Y ENFERMERIA"
+      ]
+    },
+    {
+      "indice": 110,
+      "nombre": "HTA CONTROLADA",
+      "validos": ["Si", "No"]
+    },
+    {
+      "indice": 118,
+      "nombre": "ADHERENCIA AL TRATAMIENTO FARMACOLOGICO (TEST DE MORISKY GREEN)",
+      "validos": ["Si", "No", "SINDATO"]
+    }
+  ]
+}
