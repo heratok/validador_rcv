@@ -185,7 +185,7 @@ def procesar_archivo(
                 sep=";",
                 encoding="utf-8-sig",  # UTF-8 con BOM para mejor compatibilidad
                 quoting=csv.QUOTE_NONE,
-                escapechar="",  # Sin escapechar para evitar problemas
+                escapechar=None,  # Sin escapechar para evitar problemas
                 lineterminator="\n",  # Asegurar terminadores de línea consistentes
             )
             
