@@ -18,5 +18,6 @@ __pycache__/
 
 *.log
 *.tmp
-
 *.csv
+
+*.rar
