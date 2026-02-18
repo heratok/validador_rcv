@@ -1,10 +1,11 @@
+import json
 import os
 import pandas as pd
 from openpyxl import load_workbook
 
 # --- CONFIGURACION ---
 BASE_DIR = "."
-ARCHIVO_ENCABEZADOS = "rcv_cesar.xlsx"
+ARCHIVO_ENCABEZADOS_JSON = "encabezados.json"
 DATA_START_ROW = 4  # 1-based; datos empiezan en fila 4
 
 
@@ -17,15 +18,20 @@ def detectar_engine(archivo):
     return None
 
 
-def leer_encabezados(archivo):
-    engine = detectar_engine(archivo)
-    if not engine:
-        raise ValueError(f"Formato no soportado para encabezados: {archivo}")
-    df_headers = pd.read_excel(archivo, header=None, skiprows=0, nrows=1, engine=engine)
-    return df_headers.iloc[0].tolist()
+def leer_encabezados_json(archivo):
+    if not os.path.exists(archivo):
+        raise FileNotFoundError(
+            f"No se encontro el archivo de encabezados: {archivo}. "
+            "Genere el JSON con guardar_encabezados.py"
+        )
+    with open(archivo, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, list) or not data:
+        raise ValueError("El JSON de encabezados debe ser una lista no vacia")
+    return data
 
 
-def procesar_archivo(ruta_archivo, encabezados):
+def procesar_archivo(ruta_archivo, encabezados, data_start_row=DATA_START_ROW):
     engine = detectar_engine(ruta_archivo)
     if not engine:
         print(f"Saltando (formato no soportado): {ruta_archivo}")
@@ -54,7 +60,7 @@ def procesar_archivo(ruta_archivo, encabezados):
         # Detectar la última fila con datos basándose en la PRIMERA COLUMNA (consecutivo)
         # Un registro válido = tiene consecutivo (primera columna)
         max_row = ws.max_row
-        while max_row >= DATA_START_ROW:
+        while max_row >= data_start_row:
             # Revisar si la primera columna tiene un valor
             cell = ws.cell(row=max_row, column=1)
             if cell.value is not None:
@@ -62,13 +68,18 @@ def procesar_archivo(ruta_archivo, encabezados):
             max_row -= 1
         
         # Si no encontró datos, usar DATA_START_ROW como fallback
-        if max_row < DATA_START_ROW:
-            max_row = DATA_START_ROW
+        if max_row < data_start_row:
+            max_row = data_start_row
         
-        print(f"  Procesando: filas {DATA_START_ROW} a {max_row} ({max_row - DATA_START_ROW + 1} registros)")
+        print(
+            f"  Procesando: filas {data_start_row} a {max_row} "
+            f"({max_row - data_start_row + 1} registros)"
+        )
         
         # Iterar solo hasta la última fila con datos
-        for row in ws.iter_rows(min_row=DATA_START_ROW, max_row=max_row, max_col=max_col):
+        for row in ws.iter_rows(
+            min_row=data_start_row, max_row=max_row, max_col=max_col
+        ):
             fila = []
             for cell in row:
                 if cell.value is None:
@@ -95,7 +106,7 @@ def procesar_archivo(ruta_archivo, encabezados):
         df = pd.read_excel(
             ruta_archivo,
             header=None,
-            skiprows=DATA_START_ROW - 1,
+            skiprows=data_start_row - 1,
             engine=engine
         )
 
@@ -125,15 +136,28 @@ def procesar_archivo(ruta_archivo, encabezados):
 
     # Guardar como .xlsx con sufijo
     base, _ = os.path.splitext(ruta_archivo)
-    salida = f"{base}_con_encabezados.xlsx"
+    salida = f"{base}_copia.xlsx"
     df_salida.to_excel(salida, index=False)
 
     print(f"OK - Generado: {salida}")
+    return salida
+
+
+def generar_con_encabezados(
+    archivo_excel,
+    encabezados_json_path=ARCHIVO_ENCABEZADOS_JSON,
+    data_start_row=DATA_START_ROW,
+):
+    encabezados = leer_encabezados_json(encabezados_json_path)
+    if not encabezados:
+        print("No se pudieron leer encabezados.")
+        return None
+    return procesar_archivo(archivo_excel, encabezados, data_start_row=data_start_row)
 
 
 
 def main():
-    encabezados = leer_encabezados(ARCHIVO_ENCABEZADOS)
+    encabezados = leer_encabezados_json(ARCHIVO_ENCABEZADOS_JSON)
     if not encabezados:
         print("No se pudieron leer encabezados.")
         return
@@ -149,10 +173,7 @@ def main():
             if not nombre.lower().endswith(".xlsb"):
                 continue
             ruta = os.path.join(root, nombre)
-            # Evitar el archivo de encabezados si es xlsb
-            if os.path.abspath(ruta) == os.path.abspath(ARCHIVO_ENCABEZADOS):
-                continue
-            procesar_archivo(ruta, encabezados)
+            procesar_archivo(ruta, encabezados, data_start_row=DATA_START_ROW)
 
 
 if __name__ == "__main__":

@@ -41,6 +41,11 @@ NUM_FILAS_A_SALTEAR = 1  # Según instructivo
 CONFIG_JSON = "validaciones_config.json"
 
 
+def _append_log(log_path, mensaje):
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(mensaje.rstrip() + "\n")
+
+
 def detectar_engine(archivo):
     """Detecta el engine necesario según la extensión del archivo"""
     ext = os.path.splitext(archivo)[1].lower()
@@ -274,25 +279,51 @@ def validar_df(df, encabezados, configuracion, log, num_filas_saltadas):
     return todos_los_errores, todos_los_errores_totales
 
 
-def main():
+def ejecutar_procesamiento_general(
+    archivo_entrada,
+    archivo_salida=ARCHIVO_SALIDA,
+    reporte_errores_csv=REPORTE_ERRORES_CSV,
+    reporte_errores_excel=REPORTE_ERRORES_EXCEL,
+    reporte_errores_totales_csv=REPORTE_ERRORES_TOTALES_CSV,
+    reporte_errores_totales_excel=REPORTE_ERRORES_TOTALES_EXCEL,
+    log_salida=LOG_SALIDA,
+    num_filas_a_saltar=NUM_FILAS_A_SALTEAR,
+    config_json=CONFIG_JSON,
+):
+    _append_log(log_salida, "=" * 80)
+    _append_log(
+        log_salida,
+        "PROCESAMIENTO GENERAL: NORMALIZACION + FECHAS + VALIDACION",
+    )
+    _append_log(log_salida, "=" * 80)
+    _append_log(log_salida, f"Archivo de entrada: {archivo_entrada}")
+    _append_log(
+        log_salida,
+        f"Fecha de ejecucion: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+    )
+
     print("=" * 80)
     print("PROCESAMIENTO GENERAL: NORMALIZACIÓN + FECHAS + VALIDACIÓN")
     print("=" * 80)
-    print(f"Archivo de entrada: {ARCHIVO_ENTRADA}")
+    print(f"Archivo de entrada: {archivo_entrada}")
     print(f"Fecha de ejecución: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
     # --- 1. LEER DATOS ---
     print("[1/5] Leyendo archivo de entrada...")
-    encabezados = leer_encabezados(ARCHIVO_ENTRADA)
+    encabezados = leer_encabezados(archivo_entrada)
     if not encabezados:
-        print("ERROR - No se pudieron leer los encabezados.")
-        return
+        mensaje = "ERROR - No se pudieron leer los encabezados."
+        print(mensaje)
+        _append_log(log_salida, mensaje)
+        return None
 
-    df = leer_datos(ARCHIVO_ENTRADA, NUM_FILAS_A_SALTEAR)
+    df = leer_datos(archivo_entrada, num_filas_a_saltar)
     if df is None:
-        print("ERROR - No se pudieron leer los datos.")
-        return
+        mensaje = "ERROR - No se pudieron leer los datos."
+        print(mensaje)
+        _append_log(log_salida, mensaje)
+        return None
 
     # Eliminar filas sin consecutivo (columna 1 en Excel -> indice 0)
     try:
@@ -302,6 +333,10 @@ def main():
         if filas_sin_consecutivo > 0:
             df = df.loc[~sin_consecutivo].copy()
             print(f"  OK - Filas sin consecutivo eliminadas: {filas_sin_consecutivo}")
+            _append_log(
+                log_salida,
+                f"Filas sin consecutivo eliminadas: {filas_sin_consecutivo}",
+            )
     except Exception:
         pass
 
@@ -313,8 +348,10 @@ def main():
     try:
         df = normalizar_variantes_sin_dato(df)
         print("  OK - Variantes de 'SIN DATO' normalizadas")
+        _append_log(log_salida, "OK - Variantes de 'SIN DATO' normalizadas")
     except Exception as e:
         print(f"  WARNING - Error al normalizar 'SIN DATO': {e}")
+        _append_log(log_salida, f"WARNING - Error al normalizar 'SIN DATO': {e}")
         print("  → Continuando...")
     print()
 
@@ -324,8 +361,10 @@ def main():
         # Excluir las columnas de fechas del TRIM (se procesan en el paso de fechas)
         df = aplicar_trim_general(df, indices_excluir=INDICES_FECHAS)
         print("  OK - TRIM aplicado correctamente")
+        _append_log(log_salida, "OK - TRIM aplicado correctamente")
     except Exception as e:
         print(f"  WARNING - Error en TRIM: {e}")
+        _append_log(log_salida, f"WARNING - Error en TRIM: {e}")
         print("  - Continuando sin TRIM...")
     print()
 
@@ -334,8 +373,10 @@ def main():
     try:
         df = rellenar_sindato_columnas(df)
         print("  OK - SINDATO rellenado correctamente")
+        _append_log(log_salida, "OK - SINDATO rellenado correctamente")
     except Exception as e:
         print(f"  WARNING - Error al rellenar SINDATO: {e}")
+        _append_log(log_salida, f"WARNING - Error al rellenar SINDATO: {e}")
         print("  - Continuando sin rellenar SINDATO...")
     print()
 
@@ -344,8 +385,10 @@ def main():
     try:
         df = rellenar_medicamentos_sindato(df)
         print("  OK - Medicamentos procesados correctamente")
+        _append_log(log_salida, "OK - Medicamentos procesados correctamente")
     except Exception as e:
         print(f"  WARNING - Error al procesar medicamentos: {e}")
+        _append_log(log_salida, f"WARNING - Error al procesar medicamentos: {e}")
         print("  - Continuando sin procesar medicamentos...")
     print()
 
@@ -354,8 +397,10 @@ def main():
     try:
         df = aplicar_todos_normalizadores(df)
         print("  OK - Normalizaciones aplicadas correctamente")
+        _append_log(log_salida, "OK - Normalizaciones aplicadas correctamente")
     except Exception as e:
         print(f"  WARNING - Error en normalizacion: {e}")
+        _append_log(log_salida, f"WARNING - Error en normalizacion: {e}")
         print("  - Continuando sin normalizaciones...")
     print()
 
@@ -364,25 +409,29 @@ def main():
     try:
         df = procesar_fechas_df(df, INDICES_FECHAS)
         print("  OK - Fechas procesadas correctamente")
+        _append_log(log_salida, "OK - Fechas procesadas correctamente")
     except Exception as e:
         print(f"  WARNING - Error en procesamiento de fechas: {e}")
+        _append_log(log_salida, f"WARNING - Error en procesamiento de fechas: {e}")
         print("  - Continuando sin procesar fechas...")
     print()
 
     # --- 6. VALIDAR ---
     print("[6/7] Validando contra configuración...")
-    configuracion = cargar_configuracion(CONFIG_JSON)
+    configuracion = cargar_configuracion(config_json)
     if not configuracion:
         print("  WARNING - No hay columnas configuradas para validar.")
+        _append_log(log_salida, "WARNING - No hay columnas configuradas para validar.")
         todos_los_errores = []
+        todos_los_errores_totales = []
     else:
-        with open(LOG_SALIDA, "w", encoding="utf-8") as log:
+        with open(log_salida, "w", encoding="utf-8") as log:
             todos_los_errores, todos_los_errores_totales = validar_df(
                 df,
                 encabezados,
                 configuracion,
                 log,
-                NUM_FILAS_A_SALTEAR,
+                num_filas_a_saltar,
             )
         
         print(f"  OK - Validacion completada")
@@ -392,26 +441,28 @@ def main():
             print(f"    - Errores totales (antes de normalizar): {len(todos_los_errores_totales)}")
             df_errores_totales = pd.DataFrame(todos_los_errores_totales)
             df_errores_totales.to_csv(
-                REPORTE_ERRORES_TOTALES_CSV,
+                reporte_errores_totales_csv,
                 index=False,
                 encoding="utf-8-sig",
                 sep=";",
             )
-            df_errores_totales.to_excel(REPORTE_ERRORES_TOTALES_EXCEL, index=False)
-            print(f"    - Reporte CSV total: {REPORTE_ERRORES_TOTALES_CSV}")
-            print(f"    - Reporte Excel total: {REPORTE_ERRORES_TOTALES_EXCEL}")
+            df_errores_totales.to_excel(reporte_errores_totales_excel, index=False)
+            print(f"    - Reporte CSV total: {reporte_errores_totales_csv}")
+            print(f"    - Reporte Excel total: {reporte_errores_totales_excel}")
 
         if todos_los_errores:
             print(f"    - Errores encontrados: {len(todos_los_errores)}")
             
             # Generar reporte de errores en CSV
             df_errores = pd.DataFrame(todos_los_errores)
-            df_errores.to_csv(REPORTE_ERRORES_CSV, index=False, encoding="utf-8-sig", sep=";")
-            print(f"    - Reporte CSV: {REPORTE_ERRORES_CSV}")
+            df_errores.to_csv(
+                reporte_errores_csv, index=False, encoding="utf-8-sig", sep=";"
+            )
+            print(f"    - Reporte CSV: {reporte_errores_csv}")
             
             # Generar reporte de errores en Excel
-            df_errores.to_excel(REPORTE_ERRORES_EXCEL, index=False)
-            print(f"    - Reporte Excel: {REPORTE_ERRORES_EXCEL}")
+            df_errores.to_excel(reporte_errores_excel, index=False)
+            print(f"    - Reporte Excel: {reporte_errores_excel}")
         else:
             print("    - OK - No se encontraron errores de validacion")
     print()
@@ -421,21 +472,50 @@ def main():
     try:
         # Crear DataFrame con encabezados
         df_final = pd.DataFrame(df.values, columns=encabezados[:len(df.columns)])
-        df_final.to_excel(ARCHIVO_SALIDA, index=False)
-        print(f"  OK - Archivo guardado: {ARCHIVO_SALIDA}")
+        df_final.to_excel(archivo_salida, index=False)
+        print(f"  OK - Archivo guardado: {archivo_salida}")
     except Exception as e:
         print(f"  ❌ Error al guardar archivo: {e}")
+        _append_log(log_salida, f"ERROR - No se pudo guardar archivo: {e}")
+        return None
     print()
 
     print("=" * 80)
     print("PROCESO COMPLETADO")
     print("=" * 80)
-    print(f"📊 Resultado: {ARCHIVO_SALIDA}")
+    print(f"📊 Resultado: {archivo_salida}")
     if todos_los_errores:
         print(f"⚠ Errores de validación: {len(todos_los_errores)}")
-        print(f"📋 Ver detalles en: {REPORTE_ERRORES_CSV}")
+        print(f"📋 Ver detalles en: {reporte_errores_csv}")
     else:
         print("OK - Sin errores de validacion")
+
+    return {
+        "archivo_salida": archivo_salida,
+        "log": log_salida,
+        "reporte_errores_csv": reporte_errores_csv,
+        "reporte_errores_excel": reporte_errores_excel,
+        "reporte_errores_totales_csv": reporte_errores_totales_csv,
+        "reporte_errores_totales_excel": reporte_errores_totales_excel,
+        "errores": todos_los_errores,
+        "errores_totales": todos_los_errores_totales,
+    }
+
+
+def main():
+    resultado = ejecutar_procesamiento_general(
+        ARCHIVO_ENTRADA,
+        archivo_salida=ARCHIVO_SALIDA,
+        reporte_errores_csv=REPORTE_ERRORES_CSV,
+        reporte_errores_excel=REPORTE_ERRORES_EXCEL,
+        reporte_errores_totales_csv=REPORTE_ERRORES_TOTALES_CSV,
+        reporte_errores_totales_excel=REPORTE_ERRORES_TOTALES_EXCEL,
+        log_salida=LOG_SALIDA,
+        num_filas_a_saltar=NUM_FILAS_A_SALTEAR,
+        config_json=CONFIG_JSON,
+    )
+    if not resultado:
+        print(f"ERROR - Revisa el log: {LOG_SALIDA}")
 
 
 if __name__ == "__main__":

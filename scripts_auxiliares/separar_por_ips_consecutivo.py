@@ -11,13 +11,13 @@ NOMBRE_CONSECUTIVO_IPS = "CONSECUTIVO_IPS"
 CARPETA_SALIDA = "Reportes_Por_IPS_CSV"
 
 
-def obtener_carpeta_mes(archivo):
+def obtener_carpeta_mes(archivo, carpeta_base=CARPETA_SALIDA):
     base = os.path.basename(archivo)
     nombre, _ext = os.path.splitext(base)
     prefijo = nombre.split("_")[0].strip().lower()
     mapa = {"nov": "noviembre", "dic": "diciembre", "ene": "enero"}
     carpeta_mes = mapa.get(prefijo, prefijo or "otros")
-    return os.path.join(CARPETA_SALIDA, carpeta_mes)
+    return os.path.join(carpeta_base, carpeta_mes)
 
 
 def parsear_args():
@@ -55,7 +55,12 @@ def detectar_engine(archivo):
     return None
 
 
-def procesar_archivo(archivo_excel):
+def procesar_archivo(
+    archivo_excel,
+    carpeta_salida_base=CARPETA_SALIDA,
+    num_filas_a_saltar=NUM_FILAS_A_SALTEAR,
+    indice_ips=INDICE_IPS,
+):
     print("Leyendo archivo:", archivo_excel)
     engine = detectar_engine(archivo_excel)
     df_headers = pd.read_excel(
@@ -64,17 +69,17 @@ def procesar_archivo(archivo_excel):
     encabezados = df_headers.iloc[0].tolist()
 
     df = pd.read_excel(
-        archivo_excel, header=None, skiprows=NUM_FILAS_A_SALTEAR, engine=engine
+        archivo_excel, header=None, skiprows=num_filas_a_saltar, engine=engine
     )
-    if INDICE_IPS >= len(df.columns):
-        print(f"El índice {INDICE_IPS} no existe en el archivo.")
+    if indice_ips >= len(df.columns):
+        print(f"El índice {indice_ips} no existe en el archivo.")
         return
 
     # Asignar nombres de columnas usando encabezados
     df.columns = [str(h) for h in encabezados]
-    nombre_col_ips = df.columns[INDICE_IPS]
+    nombre_col_ips = df.columns[indice_ips]
 
-    print(f"Agrupando por IPS en columna índice {INDICE_IPS} - '{nombre_col_ips}'")
+    print(f"Agrupando por IPS en columna índice {indice_ips} - '{nombre_col_ips}'")
     print(f"Total de columnas en el archivo original: {len(df.columns)}")
 
     # Crear consecutivo por IPS (1..n dentro de cada grupo) - temporal
@@ -84,7 +89,7 @@ def procesar_archivo(archivo_excel):
     df_ordenado = df.sort_values(by=[nombre_col_ips, NOMBRE_CONSECUTIVO_IPS])
 
     # Generar CSV separados por IPS
-    carpeta_salida = obtener_carpeta_mes(archivo_excel)
+    carpeta_salida = obtener_carpeta_mes(archivo_excel, carpeta_base=carpeta_salida_base)
     os.makedirs(carpeta_salida, exist_ok=True)
     print("\nGenerando CSV por IPS en:", os.path.abspath(carpeta_salida))
     for ips, grupo in df_ordenado.groupby(nombre_col_ips):
@@ -160,6 +165,21 @@ def procesar_archivo(archivo_excel):
             f"  ✔ {salida_ips} ({len(grupo)} registros, {len(grupo.columns)} columnas)"
         )
     print("\n✓ CSV por IPS generados.")
+    return carpeta_salida
+
+
+def separar_por_ips(
+    archivo_excel,
+    carpeta_salida_base=CARPETA_SALIDA,
+    num_filas_a_saltar=NUM_FILAS_A_SALTEAR,
+    indice_ips=INDICE_IPS,
+):
+    return procesar_archivo(
+        archivo_excel,
+        carpeta_salida_base=carpeta_salida_base,
+        num_filas_a_saltar=num_filas_a_saltar,
+        indice_ips=indice_ips,
+    )
 
 
 def main():

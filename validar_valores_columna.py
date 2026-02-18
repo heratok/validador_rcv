@@ -191,28 +191,34 @@ def validar_columna(df, encabezados, indice_json, config, log, num_filas_saltada
     return errores
 
 
-def main():
-    print(f"Leyendo archivo: {ARCHIVO_EXCEL}")
+def ejecutar_validacion(
+    archivo_excel,
+    log_salida=LOG_SALIDA,
+    num_filas_a_saltar=NUM_FILAS_A_SALTEAR,
+    config_json=CONFIG_JSON,
+    csv_salida=None,
+):
+    print(f"Leyendo archivo: {archivo_excel}")
 
-    configuracion = cargar_configuracion(CONFIG_JSON)
+    configuracion = cargar_configuracion(config_json)
     if not configuracion:
         print("No hay columnas configuradas para validar.")
-        return
+        return None
 
-    encabezados = leer_encabezados(ARCHIVO_EXCEL)
+    encabezados = leer_encabezados(archivo_excel)
     if not encabezados:
         print("No se pudieron leer los encabezados.")
-        return
+        return None
 
-    df = leer_datos(ARCHIVO_EXCEL, NUM_FILAS_A_SALTEAR)
+    df = leer_datos(archivo_excel, num_filas_a_saltar)
     if df is None:
-        return
+        return None
 
     todos_los_errores = []
-    
-    with open(LOG_SALIDA, "w", encoding="utf-8") as log:
+
+    with open(log_salida, "w", encoding="utf-8") as log:
         log.write("VALIDACION DE VALORES - COLUMNAS\n")
-        log.write(f"Archivo: {ARCHIVO_EXCEL}\n")
+        log.write(f"Archivo: {archivo_excel}\n")
         log.write(f"Columnas configuradas: {len(configuracion)}\n")
 
         for item in configuracion:
@@ -222,20 +228,34 @@ def main():
                 item["indice"],
                 item,
                 log,
-                NUM_FILAS_A_SALTEAR,
+                num_filas_a_saltar,
             )
             todos_los_errores.extend(errores)
 
-    print(f"Log generado: {LOG_SALIDA}")
-    
-    # Generar reporte de errores en CSV
+    print(f"Log generado: {log_salida}")
+
+    archivo_errores_csv = None
     if todos_los_errores:
         df_errores = pd.DataFrame(todos_los_errores)
-        archivo_errores_csv = "Validacion_Errores.csv"
+        archivo_errores_csv = csv_salida or "Validacion_Errores.csv"
         df_errores.to_csv(archivo_errores_csv, index=False, encoding="utf-8-sig", sep=";")
-        print(f"Reporte de errores generado: {archivo_errores_csv} ({len(todos_los_errores)} errores)")
+        print(
+            f"Reporte de errores generado: {archivo_errores_csv} ({len(todos_los_errores)} errores)"
+        )
     else:
         print("No se encontraron errores de validación.")
+
+    return {
+        "errores": todos_los_errores,
+        "log": log_salida,
+        "csv": archivo_errores_csv,
+    }
+
+
+def main(argv=None):
+    argv = argv or sys.argv[1:]
+    archivo_excel = argv[0] if argv else ARCHIVO_EXCEL
+    ejecutar_validacion(archivo_excel)
 
 
 if __name__ == "__main__":
