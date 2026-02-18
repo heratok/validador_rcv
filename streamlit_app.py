@@ -1,3 +1,4 @@
+import gc
 import os
 import shutil
 import tempfile
@@ -26,6 +27,16 @@ def _guardar_temporal(archivo_subido, prefijo):
     with open(ruta_temp, "wb") as f:
         f.write(archivo_subido.getbuffer())
     return temp_dir, ruta_temp
+
+
+def _limpiar_directorio(directorio):
+    """Limpia un directorio temporal de forma segura"""
+    try:
+        if os.path.exists(directorio):
+            shutil.rmtree(directorio)
+            gc.collect()  # Liberar memoria
+    except Exception as e:
+        print(f"Error al limpiar {directorio}: {e}")
 
 
 def _zip_carpeta(carpeta, salida_zip):
@@ -67,11 +78,14 @@ with tab_copia:
                 st.error("No se pudo generar la copia. Revisa la consola.")
             else:
                 st.success("Copia generada. Descargala abajo.")
+                # Guardar temp_dir para limpiar después
+                st.session_state["temp_dir_copia"] = temp_dir
                 with open(salida, "rb") as f:
                     st.download_button(
                         "Descargar copia",
                         f,
                         file_name=os.path.basename(salida),
+                        on_click=lambda: _limpiar_directorio(st.session_state.get("temp_dir_copia")),
                     )
 
 with tab_limpieza:
@@ -197,11 +211,13 @@ with tab_limpieza:
                 else:
                     zip_path = os.path.join(temp_dir_limpio, "Reportes_Por_IPS_CSV.zip")
                     zip_final = _zip_carpeta(carpeta_base, zip_path)
+                    st.success("CSV por IPS generados. Descarga el ZIP abajo.")
                     with open(zip_final, "rb") as f:
                         st.download_button(
                             "Descargar ZIP de IPS",
                             f,
                             file_name="Reportes_Por_IPS_CSV.zip",
+                            on_click=lambda: _limpiar_directorio(st.session_state.get("limpio_temp_dir")),
                         )
 
 with tab_validacion:
@@ -243,9 +259,8 @@ with tab_validacion:
                 st.error("No se pudo completar la validacion. Revisa la consola.")
             else:
                 st.success("Validacion terminada.")
-                st.write(f"Log: {resultado['log']}")
-                if resultado["csv"]:
-                    st.write(f"CSV de errores: {resultado['csv']}")
+                # Guardar temp_dir para limpiar después
+                st.session_state["temp_dir_validacion"] = temp_dir
 
                 with open(resultado["log"], "rb") as f:
                     st.download_button(
@@ -260,4 +275,5 @@ with tab_validacion:
                             "Descargar CSV",
                             f,
                             file_name="Validacion_Errores.csv",
+                            on_click=lambda: _limpiar_directorio(st.session_state.get("temp_dir_validacion")),
                         )
