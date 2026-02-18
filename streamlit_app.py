@@ -142,6 +142,7 @@ with tab_limpieza:
                 st.success("Limpieza terminada. Descarga el Excel limpio abajo.")
                 st.session_state["limpio_archivo"] = resultado["archivo_salida"]
                 st.session_state["limpio_temp_dir"] = temp_dir
+                st.session_state["limpieza_completada"] = True
 
                 if os.path.exists(resultado["archivo_salida"]):
                     with open(resultado["archivo_salida"], "rb") as f:
@@ -187,16 +188,19 @@ with tab_limpieza:
 
         archivo_limpio = st.session_state.get("limpio_archivo")
         temp_dir_limpio = st.session_state.get("limpio_temp_dir")
+        limpieza_completada = st.session_state.get("limpieza_completada", False)
         puede_exportar = (
             archivo_limpio
             and os.path.exists(archivo_limpio)
             and temp_dir_limpio
             and os.path.exists(temp_dir_limpio)
+            and limpieza_completada
         )
 
+        st.write("**Paso 3: Exportar por IPS**")
         if st.button("Exportar por IPS", disabled=not puede_exportar):
             if not puede_exportar:
-                st.error("Primero ejecuta la limpieza y genera el Excel limpio.")
+                st.error("Primero ejecuta la limpieza arriba.")
             else:
                 carpeta_base = os.path.join(temp_dir_limpio, "Reportes_Por_IPS_CSV")
                 with st.spinner("Generando CSV por IPS..."):
@@ -212,13 +216,24 @@ with tab_limpieza:
                     zip_path = os.path.join(temp_dir_limpio, "Reportes_Por_IPS_CSV.zip")
                     zip_final = _zip_carpeta(carpeta_base, zip_path)
                     st.success("CSV por IPS generados. Descarga el ZIP abajo.")
+                    st.session_state["ips_descargado"] = False
                     with open(zip_final, "rb") as f:
                         st.download_button(
                             "Descargar ZIP de IPS",
                             f,
                             file_name="Reportes_Por_IPS_CSV.zip",
-                            on_click=lambda: _limpiar_directorio(st.session_state.get("limpio_temp_dir")),
+                            on_click=lambda: st.session_state.update({"ips_descargado": True}),
                         )
+                    
+                    if st.session_state.get("ips_descargado", False):
+                        st.info("✅ Descarga completada. Puedes cargar una nueva copia arriba para continuar.")
+                        if st.button("Limpiar y preparar para nuevo archivo"):
+                            _limpiar_directorio(st.session_state.get("limpio_temp_dir"))
+                            st.session_state["limpio_archivo"] = None
+                            st.session_state["limpio_temp_dir"] = None
+                            st.session_state["limpieza_completada"] = False
+                            st.session_state["ips_descargado"] = False
+                            st.rerun()
 
 with tab_validacion:
     st.subheader("Validar columnas (sin limpiar)")
