@@ -4,8 +4,6 @@
 *.xls
 *.xlsb
 
-
-
 # Ignore Python bytecode files
 __pycache__/
 *.pyc
@@ -21,3 +19,11 @@ __pycache__/
 *.csv
 
 *.rar
+
+# Ignore temporary directories
+temp_*/
+limpios/
+
+# Keep essential JSON files for deployment
+!encabezados.json
+!validaciones_config.json

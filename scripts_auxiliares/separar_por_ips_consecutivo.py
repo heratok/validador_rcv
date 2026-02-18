@@ -141,9 +141,34 @@ def procesar_archivo(
         # Llenar cualquier NaN restante con SINDATO
         grupo = grupo.fillna("SINDATO")
 
-        # Limpiar punto y coma (;) de TODAS las columnas para evitar problemas con el delimitador
+        # LIMPIEZA EXHAUSTIVA: Eliminar todos los caracteres que pueden romper el CSV
         for col in grupo.columns:
-            grupo[col] = grupo[col].astype(str).str.replace(";", "", regex=False)
+            # Convertir a string primero
+            grupo[col] = grupo[col].astype(str)
+            
+            # Eliminar saltos de línea, retornos de carro y tabulaciones
+            grupo[col] = grupo[col].str.replace("\n", " ", regex=False)
+            grupo[col] = grupo[col].str.replace("\r", " ", regex=False)
+            grupo[col] = grupo[col].str.replace("\t", " ", regex=False)
+            
+            # Eliminar punto y coma (;) - delimitador del CSV
+            grupo[col] = grupo[col].str.replace(";", "", regex=False)
+            
+            # Eliminar comillas dobles y simples que pueden causar problemas
+            grupo[col] = grupo[col].str.replace('"', "", regex=False)
+            grupo[col] = grupo[col].str.replace("'", "", regex=False)
+            
+            # Eliminar backslashes que pueden causar problemas con escapechar
+            grupo[col] = grupo[col].str.replace("\\", "", regex=False)
+            
+            # Limpiar espacios múltiples que quedan después de los reemplazos
+            grupo[col] = grupo[col].str.replace(r"\s+", " ", regex=True)
+            
+            # Limpiar espacios al inicio y final
+            grupo[col] = grupo[col].str.strip()
+            
+            # Reemplazar strings vacíos resultantes con SINDATO
+            grupo[col] = grupo[col].replace("", "SINDATO")
 
         # Verificar que tengamos exactamente 125 columnas
         if len(grupo.columns) != 125:
@@ -152,18 +177,42 @@ def procesar_archivo(
             )
 
         # Guardar CSV con encabezados, delimitado por ';', sin comillas, en UTF-8
-        grupo.to_csv(
-            salida_ips,
-            index=False,
-            header=True,
-            sep=";",
-            encoding="utf-8",
-            quoting=csv.QUOTE_NONE,
-            escapechar="\\",
-        )
-        print(
-            f"  ✔ {salida_ips} ({len(grupo)} registros, {len(grupo.columns)} columnas)"
-        )
+        try:
+            grupo.to_csv(
+                salida_ips,
+                index=False,
+                header=True,
+                sep=";",
+                encoding="utf-8-sig",  # UTF-8 con BOM para mejor compatibilidad
+                quoting=csv.QUOTE_NONE,
+                escapechar="",  # Sin escapechar para evitar problemas
+                lineterminator="\n",  # Asegurar terminadores de línea consistentes
+            )
+            
+            # VALIDACIÓN POST-GUARDADO: Verificar que el CSV se guardó correctamente
+            with open(salida_ips, "r", encoding="utf-8-sig") as f:
+                lineas = f.readlines()
+                total_lineas = len(lineas)
+                
+                # Verificar algunas filas aleatorias para asegurar que tienen 125 columnas
+                problemas_encontrados = []
+                for idx in [1, min(10, total_lineas-1), min(100, total_lineas-1), total_lineas-1]:
+                    if idx < total_lineas:
+                        cols = lineas[idx].count(";") + 1
+                        if cols != 125:
+                            problemas_encontrados.append((idx+1, cols))
+                
+                if problemas_encontrados:
+                    print(f"  ⚠️ ERROR CRÍTICO en {nombre_seguro}:")
+                    for fila, cols in problemas_encontrados:
+                        print(f"     Fila {fila}: {cols} columnas detectadas (esperadas: 125)")
+                else:
+                    print(
+                        f"  ✔ {salida_ips} ({len(grupo)} registros, {len(grupo.columns)} columnas) - VALIDADO"
+                    )
+        except Exception as e:
+            print(f"  ❌ ERROR al guardar {nombre_seguro}: {str(e)}")
+            raise
     print("\n✓ CSV por IPS generados.")
     return carpeta_salida
 
