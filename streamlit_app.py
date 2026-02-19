@@ -13,6 +13,75 @@ from validar_valores_columna import ejecutar_validacion
 
 st.set_page_config(page_title="Dashboard Excel", layout="centered")
 
+# Selector de tema en el sidebar
+with st.sidebar:
+    st.header("⚙️ Configuración")
+    if "tema" not in st.session_state:
+        st.session_state.tema = "Claro"
+    
+    tema = st.radio(
+        "Tema de color:",
+        ["Claro", "Oscuro"],
+        index=0 if st.session_state.tema == "Claro" else 1,
+        key="selector_tema"
+    )
+    st.session_state.tema = tema
+
+# Aplicar CSS según el tema seleccionado
+if st.session_state.tema == "Oscuro":
+    st.markdown("""
+        <style>
+        /* Tema Oscuro */
+        :root {
+            --background-color: #0e1117;
+            --secondary-background-color: #262730;
+            --text-color: #fafafa;
+            --primary-color: #ff4b4b;
+        }
+        .stApp {
+            background-color: #0e1117;
+            color: #fafafa;
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: #262730;
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #fafafa;
+        }
+        .stSelectbox, .stTextInput, .stNumberInput {
+            color: #fafafa;
+        }
+        div[data-testid="stSidebar"] {
+            background-color: #262730;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+        <style>
+        /* Tema Claro */
+        :root {
+            --background-color: #ffffff;
+            --secondary-background-color: #f0f2f6;
+            --text-color: #262730;
+            --primary-color: #1f77b4;
+        }
+        .stApp {
+            background-color: #ffffff;
+            color: #262730;
+        }
+        .stTabs [data-baseweb="tab-list"] {
+            background-color: #f0f2f6;
+        }
+        .stTabs [data-baseweb="tab"] {
+            color: #262730;
+        }
+        div[data-testid="stSidebar"] {
+            background-color: #f0f2f6;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
 st.title("Dashboard de procesamiento")
 st.write("Flujo guiado: 1) crear copia, 2) limpiar, 3) exportar por IPS.")
 
