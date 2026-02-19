@@ -41,7 +41,7 @@ def mostrar_tab_limpieza():
     st.success(formatear_mensaje_exito(archivo_con_encabezados.name))
     
     # Paso A: Limpieza
-    _mostrar_seccion_limpieza(temp_dir, ruta_temp)
+    _mostrar_seccion_limpieza(temp_dir, ruta_temp, archivo_con_encabezados.name)
     
     mostrar_separador_paso()
     
@@ -49,14 +49,21 @@ def mostrar_tab_limpieza():
     _mostrar_seccion_exportacion_ips()
 
 
-def _mostrar_seccion_limpieza(temp_dir, ruta_temp):
+def _mostrar_seccion_limpieza(temp_dir, ruta_temp, nombre_archivo):
     """Muestra la sección de limpieza de datos"""
     st.markdown("#### 🔧 Paso A: Ejecutar Limpieza de Datos")
     
     if boton_centrado("Ejecutar Limpieza", "🧹"):
+        # Generar nombre del archivo limpio basado en el original
+        nombre_base = os.path.splitext(nombre_archivo)[0]  # Quitar extensión
+        # Quitar "_copia" si existe
+        if nombre_base.endswith("_copia"):
+            nombre_base = nombre_base[:-6]  # Quitar los últimos 6 caracteres "_copia"
+        nombre_limpio = f"{nombre_base}_limpio.xlsx"
+        
         # Preparar rutas
         archivos_salida = {
-            "excel": os.path.join(temp_dir, "Procesado_Final.xlsx"),
+            "excel": os.path.join(temp_dir, nombre_limpio),
             "log": os.path.join(temp_dir, "Procesamiento_General.log"),
             "reporte_csv": os.path.join(temp_dir, "Reporte_Validacion_Errores.csv"),
             "reporte_excel": os.path.join(temp_dir, "Reporte_Validacion_Errores.xlsx"),
@@ -90,11 +97,12 @@ def _mostrar_seccion_limpieza(temp_dir, ruta_temp):
             st.session_state["limpio_archivo"] = resultado["archivo_salida"]
             st.session_state["limpio_temp_dir"] = temp_dir
             st.session_state["limpieza_completada"] = True
+            st.session_state["nombre_archivo_limpio"] = nombre_limpio
             
-            _mostrar_archivos_limpieza(resultado)
+            _mostrar_archivos_limpieza(resultado, nombre_limpio)
 
 
-def _mostrar_archivos_limpieza(resultado):
+def _mostrar_archivos_limpieza(resultado, nombre_limpio):
     """Muestra los archivos generados por la limpieza"""
     st.markdown("#### 📦 Archivos Generados")
     
@@ -107,7 +115,7 @@ def _mostrar_archivos_limpieza(resultado):
                 st.download_button(
                     "⬇️ Excel Limpio",
                     f,
-                    file_name="Procesado_Final.xlsx",
+                    file_name=nombre_limpio,
                     use_container_width=True
                 )
 
